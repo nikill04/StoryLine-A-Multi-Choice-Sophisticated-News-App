@@ -1,0 +1,100 @@
+import React, { useEffect, useState } from 'react'
+import NewsItem from './NewsItem'
+import Spinner from './Spinner';
+import PropTypes from 'prop-types'
+import InfiniteScroll from "react-infinite-scroll-component";
+
+const News = (props) => {
+
+    const [articles, setArticles] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [page, setPage] = useState(1)
+    const [totalResults, setTotalResults] = useState(0)
+    // document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
+
+    const capitalizeFirstLetter = (string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    const updateNews = async () => {
+        props.setProgress(10)
+        setLoading(true)
+        let url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`
+        let data = await fetch(url);
+        props.setProgress(30)
+        let parsedData = await data.json()
+        props.setProgress(70)
+        setArticles(parsedData.articles)
+        setTotalResults(parsedData.totalResults)
+        setLoading(false)
+        props.setProgress(100)
+    }
+
+    //Here 'useEffect' does the work of 'componentDidMount()'
+    useEffect(() => {
+        updateNews()
+    }, [])
+
+    // const handlePrevClick = async () => {
+    //     setPage(page - 1)
+    //     updateNews();
+    // }
+
+    // const handleNextClick = async () => {
+    //     setPage(page + 1)
+    //     updateNews();
+    // }
+
+    const fetchMoreData = async () => {
+        const nextPage = page + 1
+        setPage(nextPage)
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${nextPage}&pageSize=${props.pageSize}`
+        let data = await fetch(url);
+        let parsedData = await data.json()
+        setArticles(articles.concat(parsedData.articles))
+        setTotalResults(parsedData.totalResults)
+    }
+
+    return (
+        <>
+            <h1 className="text-center" style={{ margin: "35px 0px" }} >NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
+            {loading && <Spinner />}
+
+            <InfiniteScroll
+                dataLength={articles.length}
+                hasMore={articles.length !== totalResults}
+                next={fetchMoreData}
+                loader={<Spinner />}
+            >
+                <div className="container">
+                    <div className="row">
+                        {articles.map((element => {
+                            if (!element) return null; // Check if element is undefined
+                            return <div className="col-md-4" key={element.url}>
+                                <NewsItem title={element.title ? element.title : ""} description={element.description ? element.description : ""} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt} source={element.source.name} />
+                            </div>
+                        }))}
+                    </div>
+                </div>
+            </InfiniteScroll>
+
+            {/* When the number of articles (articles.length) equals the total number of results available (totalResults), 'hasMore' is set to false, indicating that there’s no more content to load. This stops the infinite scroll. */}
+            {/* 'next' is a function that the InfiniteScroll component calls when the user reaches the bottom of the list. */}
+            {/* When the end is reached and 'hasMore' is still true (indicating that more articles are available), InfiniteScroll triggers the next function. While fetchMoreData is in progress, InfiniteScroll automatically displays the loader component (the <Spinner />). */}
+        </>
+    )
+}
+
+News.defaultProps = {
+    country: 'us',
+    pageSize: 5,
+    category: "general"
+}
+
+News.propTypes = {
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    category: PropTypes.string
+}
+
+export default News

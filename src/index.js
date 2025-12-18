@@ -24,7 +24,7 @@ import './index.css'; // Global styles
 import reportWebVitals from './reportWebVitals';
 
 // Set the current lesson you want to load
-const myProgress = 40; // CHANGE THIS NUMBER TO LOAD A DIFFERENT FILE
+const myProgress = 23; // CHANGE THIS NUMBER TO LOAD A DIFFERENT FILE
 const CurrentLesson = require(`./MyNewsApp/myAppsProgress_${myProgress}/App`).default;
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
